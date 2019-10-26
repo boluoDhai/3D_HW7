@@ -7,6 +7,7 @@
 - [运行截图](#img)
     - [视频网址](#stream)
 - [具体模型](#model)
+- [发布订阅模式](#message)
 - [源代码](#code)
     - [player_movement.cs](#player)
     - [UI.cs](#ui)
@@ -40,10 +41,18 @@ Wall: Search StoneWall
 Map: 整体的布局如下  
 ![Map](asset/map.png)   
 
+<h3 id="message">发布订阅模式</h3>
+
+订阅者把自己想订阅的事件注册到调度中心，当该事件触发时候，发布者发布该事件到调度中心（顺带上下文），由调度中心统一调度订阅者注册到调度中心的处理代码.  
+比如有个界面是实时显示天气，它就订阅天气事件（注册到调度中心，包括处理程序），当天气变化时（定时获取数据），就作为发布者发布天气信息到调度中心，调度中心就调度订阅者的天气处理程序。  
+![message](asset/message.png)  
+针对此游戏来讲, 我们定义两种消息, Catch与PlayerPosition, Catch用来处理Player被Monster追击到的情况, PlayerPosition用来发布Player自身的坐标信息, 从而给Monster发现并追击的机会.
+
 <h3 id="code"> 源代码</h3>
 
 <h4 id="player"> player_movement.cs</h4>
 
+管理Player的移动与旋转, 并进行消息的发布和订阅, 具体发布Catch和PlayerPosition两个消息, 当Player在运动过程中与巡逻兵发生碰撞时会触发OnCollisionEnter()函数, 进一步发布Catch消息, 通知场景控制器游戏结束. PlayerPosition消息是用来通知Monster自己的坐标位置, 从而距离小于一定值的时候Monster发现自己并开始追击.
 ```c#
 using UnityEngine;
 
@@ -183,6 +192,7 @@ namespace SwordWorld
 ```  
 <h4 id="ui"> UI.cs</h4>
 
+UI部分主要负责管理Score
 ```c#
 using System.Collections;
 using System.Collections.Generic;
@@ -217,6 +227,7 @@ public class UI : MonoBehaviour
 ```  
 <h4 id="monstermove"> MonsterMove.cs</h4>
 
+MonsterMove脚本负责管理Monster的移动, 并且订阅PlayerPosition消息, 从而获取Player当前的坐标信息, 当距离小于一定值的时候就会触发追击函数, 也就是Monster发现了Player, 并加快速度进行追击.
 ```c#
 using System.Collections;
 using System.Collections.Generic;
@@ -306,6 +317,7 @@ public class MonsterMove : MonoBehaviour
 ```
 <h4 id="judge"> Judge.cs</h4>
 
+Judge脚本与场景控制器协同负责判断游戏的结束.
 ```c#
 using System.Collections;
 using System.Collections.Generic;
